@@ -1,0 +1,72 @@
+<?php
+
+class ButlerContextSingle {
+  protected $cache;
+  /**
+   * Get an/the object.
+   */
+  function get() {
+    if ($this->cache) {
+      return $this->cache;
+    }
+    $this->cache = $this->imply();
+    if ($this->cache) {
+      return $this->cache;
+    }
+    return FALSE;
+  }
+  function set($value) {
+    $this->cache = $value;
+  }
+  protected function imply() {}
+}
+
+class ButlerContextMultiple {
+  protected $cache;
+  /**
+   * Get an/the object.
+   */
+  function get($param) {
+    if (isset($this->cache[$param])) {
+      return $this->cache[$param];
+    }
+    $this->cache[$param] = $this->imply($param);
+    if ($this->cache[$param]) {
+      return $this->cache[$param];
+    }
+    return FALSE;
+  }
+  function set($param = NULL, $value) {
+    if ($param) {
+      $this->cache[$param] = $value;
+    }
+    else {
+      $this->cache = $value;
+    }
+  }
+  protected function imply($param) {}
+}
+
+class ButlerContext extends ButlerContextMultiple {
+  function get($type, $param = NULL) {
+    $result = parent::get($type);
+    if ($result) {
+      return $result->get($param);
+    }
+    return FALSE;
+  }
+  function imply($type) {
+    $class = 'ButlerContext_' . $type;
+    $object = new $class;
+    $object->context = $this;
+    return $object;
+  }
+}
+
+function butler_context() {
+  static $context;
+  if (!isset($context)) {
+      $context = new ButlerContext();
+  }
+  return $context;
+}

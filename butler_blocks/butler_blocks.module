@@ -1,0 +1,104 @@
+<?php
+
+function butler_blocks_menu() {
+  $items = array();
+
+  $items['administer/displays'] = array(
+    'title' => 'Displays',
+    'page callback' => '',
+    'access arguments' => array('access content'),
+  );
+
+  $items['administer/displays/display/%butler_blocks_display'] = array(
+    'title' => 'Displays',
+    'page callback' => '',
+    'access arguments' => array('access content'),
+  );
+
+  return $items;
+}
+
+function butler_blocks_menu_alter(&$items) {
+  db_query('DELETE FROM {butler_blocks_display_cache}');
+  $query = db_query('SELECT did, url FROM {butler_blocks_display}');
+  $displays = array();
+  foreach ($query as $display) {
+    $displays[$display->url][] = $display->did;
+  }
+  foreach ($displays as $url => $displays) {
+    if (isset($items[$url])) {
+      $item = $items[$url];
+    }
+    else {
+      $item = FALSE;
+    }
+    $displays['default'] = $item;
+    $cache = db_insert('butler_blocks_display_cache')->fields(array(
+      'data' => serialize($displays),
+    ))->execute();
+    $items[$url] = array(
+      'title callback' => 'butler_blocks_page_title',
+      'title arguments' => array($cache),
+      'page callback' => 'butler_blocks_page_callback',
+      'page arguments' => array($cache),
+      'access callback' => 'butler_blocks_access_callback',
+      'access arguments' => array($cache),
+    );
+  }
+}
+
+function butler_blocks_display_load($did) {
+  $display = db_query('SELECT did, url, data FROM {butler_blocks_display} WHERE did = :did', array(':did' => $did))->fetch();
+  $display = drupal_unpack($display);
+  $class = 'ButlerBlocksDisplay_' . $display->type;
+  return new $class($display, butler_context());
+}
+
+function _butler_blocks_active_display($cid) {
+  static $cache_display;
+  if (isset($cache_display)) {
+    return $cache_display;
+  }
+  $displays = unserialize(db_query('SELECT data FROM {butler_blocks_display_cache} WHERE cid = :cid', array(':cid' => $cid))->fetch()->data);
+  $default = $displays['default'];
+  unset($displays['default']);
+  foreach ($displays as $did) {
+    $display = butler_blocks_display_load($did);
+    if ($display->active()) {
+      $cache_display = $display;
+      return $display;
+    }
+  }
+  $cache_display = new ButlerBlocksDisplay_default((object)$default);
+  return $cache_display;
+}
+
+function butler_blocks_page_title($cid) {
+  $display = _butler_blocks_active_display($cid);
+  return $display->title();
+}
+
+function butler_blocks_access_callback($cid) {
+  return TRUE;
+}
+
+function butler_blocks_page_callback($cid) {
+  return 'hi';
+}
+
+class ButlerBlocksDisplay {
+  function __construct($data, $context) {
+    $this->data = $data;
+    $this->context = $context;
+  }
+}
+
+function butler_blocks_init() {
+  /*
+  db_query('INSERT INTO {butler_blocks_display} (url, data) VALUES (:url, :data)', array(':url' => 'node/%node', ':data' => serialize(array(
+    'type' => 'node_type',
+    'node_type' => 'page',
+  ))));
+  */
+  menu_rebuild();
+}
