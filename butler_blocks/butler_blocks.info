@@ -9,4 +9,5 @@ core = 7.x
 files[] = butler_blocks.module
 files[] = butler_blocks.pages.inc
 files[] = plugins/butler_blocks.default.inc
+files[] = plugins/butler_blocks.node_blocks.inc
 files[] = plugins/butler_blocks.node_type.inc

@@ -7,4 +7,7 @@ class ButlerBlocksDisplay_node_type extends ButlerBlocksDisplay {
   function title() {
     return $this->context->get('node')->title;
   }
+  function available_contexts() {
+    return array('node');
+  }
 }

@@ -1,5 +1,7 @@
 <?php
 
+define('BUTLER_BLOCKS_DEFAULT_CONTEXT', '-- default --');
+
 function butler_blocks_menu() {
   $items = array();
 
@@ -40,7 +42,6 @@ function butler_blocks_menu_alter(&$items) {
       'title callback' => 'butler_blocks_page_title',
       'title arguments' => array($cache),
       'page callback' => 'butler_blocks_page_callback',
-      'page arguments' => array($cache),
       'access callback' => 'butler_blocks_access_callback',
       'access arguments' => array($cache),
     );
@@ -54,10 +55,13 @@ function butler_blocks_display_load($did) {
   return new $class($display, butler_context());
 }
 
-function _butler_blocks_active_display($cid) {
+function _butler_blocks_active_display($cid = NULL) {
   static $cache_display;
   if (isset($cache_display)) {
     return $cache_display;
+  }
+  if (!$cid) {
+    return FALSE;
   }
   $displays = unserialize(db_query('SELECT data FROM {butler_blocks_display_cache} WHERE cid = :cid', array(':cid' => $cid))->fetch()->data);
   $default = $displays['default'];
@@ -69,7 +73,7 @@ function _butler_blocks_active_display($cid) {
       return $display;
     }
   }
-  $cache_display = new ButlerBlocksDisplay_default((object)$default);
+  $cache_display = new ButlerBlocksDisplay_default($default, butler_context());
   return $cache_display;
 }
 
@@ -82,8 +86,8 @@ function butler_blocks_access_callback($cid) {
   return TRUE;
 }
 
-function butler_blocks_page_callback($cid) {
-  return 'hi';
+function butler_blocks_page_callback() {
+  return '';
 }
 
 class ButlerBlocksDisplay {
@@ -91,14 +95,59 @@ class ButlerBlocksDisplay {
     $this->data = $data;
     $this->context = $context;
   }
+  function render(&$page) {
+    foreach ($this->data->blocks as $block) {
+      $context = clone $this->context;
+      foreach ($block['contexts'] as $name => $value) {
+        if ($value != BUTLER_BLOCKS_DEFAULT_CONTEXT) {
+          $class = 'ButlerContext_' . $name;
+          $object = new $class;
+          $object->set($value);
+          $context->set($name, $object);
+        }
+      }
+      $class = 'ButlerBlocksBlock_' . $block['type'];
+      $object = new $class($context);
+      $page[$block['region']][] = $object->render();
+    }
+  }
+}
+
+class ButlerBlocksBlock {
+  function __construct($context) {
+    $this->context = $context;
+  }
 }
 
 function butler_blocks_init() {
-  /*
+  db_query('TRUNCATE {butler_blocks_display}');
   db_query('INSERT INTO {butler_blocks_display} (url, data) VALUES (:url, :data)', array(':url' => 'node/%node', ':data' => serialize(array(
     'type' => 'node_type',
     'node_type' => 'page',
+    'blocks' => array(
+      array(
+        'region' => 'content',
+        'type' => 'node_content',
+        'contexts' => array('node' => BUTLER_BLOCKS_DEFAULT_CONTEXT),
+      ),
+      array(
+        'region' => 'sidebar_first',
+        'type' => 'node_content',
+        'contexts' => array('node' => 2),
+      ),
+    ),
   ))));
-  */
-  menu_rebuild();
+  //menu_rebuild();
+  //module_implements('', FALSE, TRUE);
+  //registry_rebuild();
+}
+
+/**
+ * Implements hook_page_build().
+ */
+function butler_blocks_page_build(&$page) {
+  global $theme;
+  if ($display = _butler_blocks_active_display()) {
+    $display->render($page);
+  }
 }
