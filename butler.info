@@ -8,8 +8,7 @@ core = 7.x
 
 files[] = butler.module
 files[] = plugins/butler.conf.inc
-files[] = plugins/butler.http_get.inc
-files[] = plugins/butler.http_post.inc
+files[] = plugins/butler.http.inc
 files[] = plugins/butler.node.inc
 files[] = plugins/butler.node_user.inc
 files[] = plugins/butler.user.inc
