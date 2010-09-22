@@ -32,8 +32,8 @@ class ButlerContext {
 
     foreach ($ancestors as $ancestor => $children) {
       if ($handler = $this->handler($ancestor)) {
-        $this->cache[$ancestor] = $handler->get($children);
-        return $this->cache[$ancestor];
+        $this->cache[$selector] = $handler->get($children);
+        return $this->cache[$selector];
       }
     }
   }
