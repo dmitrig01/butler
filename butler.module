@@ -1,67 +1,84 @@
 <?php
 
-class ButlerContextSingle {
-  protected $cache;
-  /**
-   * Get an/the object.
-   */
-  function get() {
-    if ($this->cache) {
-      return $this->cache;
+class ButlerContext {
+  protected $cache = array();
+  protected $handlers;
+  protected $handler_objects = array();
+  function get($selector) {
+    // Just do a quick one-off caching to catch most cases.
+    if (isset($this->cache[$selector])) {
+      return $this->cache[$selector];
     }
-    $this->cache = $this->imply();
-    if ($this->cache) {
-      return $this->cache;
+
+    $parts = explode(':', $selector);
+    $ancestors = array();
+    for ($i = 0; $i <= count($parts); $i++) {
+      $current = array();
+      $children = array();
+      for ($j = 0; $j < count($parts); $j++) {
+        if ($j < $i) {
+          $current[] = $parts[$j];
+        }
+        else {
+          $children[] = $parts[$j];
+        }
+      }
+      $ancestors[implode(':', $current)] = $children;
     }
-    return FALSE;
+
+    $ancestors = array_reverse($ancestors);
+
+    foreach ($ancestors as $ancestor => $children) {
+      if ($handler = $this->handler($ancestor)) {
+        $this->cache[$ancestor] = $handler->get($children);
+        return $this->cache[$ancestor];
+      }
+    }
   }
-  function set($value) {
-    $this->cache = $value;
+
+  function set($selector, $value) {
+    if (is_string($value)) {
+      $this->cache[$selector] = $value;
+    }
+    elseif (is_object($value)) {
+      $this->handlers[$selector] = TRUE;
+      $this->handler_objects[$selector] = $value;
+    }
   }
-  protected function imply() {}
+
+  protected function handler($selector) {
+    if (!isset($this->handlers)) {
+      $this->handlers = module_invoke_all('butler');
+    }
+    if (!isset($this->handlers[$selector])) {
+      return FALSE;
+    }
+    if (!isset($this->handler_objects[$selector])) {
+      $this->handler_objects[$selector] = new $this->handlers[$selector]();
+    }
+    return $this->handler_objects[$selector];
+  }
 }
 
-class ButlerContextMultiple {
-  protected $cache;
-  /**
-   * Get an/the object.
-   */
-  function get($param) {
-    if (isset($this->cache[$param])) {
-      return $this->cache[$param];
+class ButlerContextHTTP {
+  function get($parts) {
+    switch ($parts[0]) {
+      case 'get':
+        $array = $_GET;
+        break;
+      case 'post':
+        $array = $_POST;
+        break;
+      default:
+        return FALSE;
     }
-    $this->cache[$param] = $this->imply($param);
-    if ($this->cache[$param]) {
-      return $this->cache[$param];
+    if ($parts[1] && isset($array[$parts[1]])) {
+      return $array[$parts[1]];
     }
     return FALSE;
   }
-  function set($param = NULL, $value) {
-    if ($param) {
-      $this->cache[$param] = $value;
-    }
-    else {
-      $this->cache = $value;
-    }
-  }
-  protected function imply($param) {}
 }
 
-class ButlerContext extends ButlerContextMultiple {
-  function get($type, $param = NULL) {
-    $result = parent::get($type);
-    if ($result) {
-      return $result->get($param);
-    }
-    return FALSE;
-  }
-  function imply($type) {
-    $class = 'ButlerContext_' . $type;
-    $object = new $class;
-    $object->context = $this;
-    return $object;
-  }
-}
 
 function butler_context() {
   static $context;
@@ -69,4 +86,10 @@ function butler_context() {
       $context = new ButlerContext();
   }
   return $context;
+}
+
+function butler_butler() {
+  return array(
+    'http' => 'ButlerContextHTTP',
+  );
 }

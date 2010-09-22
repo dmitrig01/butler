@@ -120,6 +120,7 @@ class ButlerBlocksBlock {
 }
 
 function butler_blocks_init() {
+  /*
   db_query('TRUNCATE {butler_blocks_display}');
   db_query('INSERT INTO {butler_blocks_display} (url, data) VALUES (:url, :data)', array(':url' => 'node/%node', ':data' => serialize(array(
     'type' => 'node_type',
@@ -137,6 +138,7 @@ function butler_blocks_init() {
       ),
     ),
   ))));
+  */
   //menu_rebuild();
   //module_implements('', FALSE, TRUE);
   //registry_rebuild();
