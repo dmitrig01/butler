@@ -3,7 +3,6 @@
 name = Butler
 description = Context stuff
 package = Butler
-version = VERSION
 core = 7.x
 
 files[] = butler.module

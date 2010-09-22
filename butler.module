@@ -1,9 +1,11 @@
 <?php
+// $Id$
 
 class ButlerContext {
   protected $cache = array();
   protected $handlers;
   protected $handler_objects = array();
+
   function get($selector) {
     // Just do a quick one-off caching to catch most cases.
     if (isset($this->cache[$selector])) {
