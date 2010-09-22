@@ -1,10 +1,10 @@
 <?php
 
-class ButlerContext_conf extends ButlerContextMultiple {
-  function imply($param) {
+class ButlerContextConf extends ButlerContextItem {
+  function get($parts) {
     global $conf;
-    if (isset($conf[$param])) {
-      return $conf[$param];
+    if (isset($conf[$parts[0]])) {
+      return $conf[$parts[0]];
     }
   }
 }
