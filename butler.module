@@ -60,6 +60,10 @@ class ButlerContext {
   }
 }
 
+abstract class ButlerContextItem {
+  abstract function get($parts);
+}
+
 function butler_context() {
   static $context;
   if (!isset($context)) {

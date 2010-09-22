@@ -1,6 +1,6 @@
 <?php
 
-class ButlerContextHTTP {
+class ButlerContextHTTP extends ButlerContextItem {
   function get($parts) {
     switch ($parts[0]) {
       case 'get':
