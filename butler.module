@@ -39,12 +39,12 @@ class ButlerContext {
   }
 
   function set($selector, $value) {
-    if (is_string($value)) {
-      $this->cache[$selector] = $value;
-    }
-    elseif (is_object($value)) {
+    if (is_object($value)) {
       $this->handlers[$selector] = TRUE;
       $this->handler_objects[$selector] = $value;
+    }
+    else {
+      $this->cache[$selector] = $value;
     }
   }
 
