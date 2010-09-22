@@ -76,5 +76,6 @@ function butler_butler() {
   return array(
     'http' => 'ButlerContextHTTP',
     'conf' => 'ButlerContextConf',
+    'user' => 'ButlerContextUser',
   );
 }

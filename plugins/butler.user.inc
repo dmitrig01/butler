@@ -1,7 +1,7 @@
 <?php
 
-class ButlerContext_user extends ButlerContextSingle {
-  function imply() {
+class ButlerContextUser extends ButlerContextItem {
+  function get($parts) {
     global $user;
     return $user;
   }
