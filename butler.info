@@ -10,5 +10,4 @@ files[] = butler.module
 files[] = plugins/butler.conf.inc
 files[] = plugins/butler.http.inc
 files[] = plugins/butler.node.inc
-files[] = plugins/butler.node_user.inc
 files[] = plugins/butler.user.inc
