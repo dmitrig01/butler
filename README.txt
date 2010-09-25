@@ -4,7 +4,7 @@ http://groups.drupal.org/butler.
 The butler module intends to provide a unified context for Drupal, through a
 single context object.
 
-The context object can be retreived by calling butler_context(), but it is
+The context object can be retrieved by calling butler_context(), but it is
 preferable to be passed a context object, or pass others the context object.
 
 To get a piece of contextual information, simply call ->get() on the context
